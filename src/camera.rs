@@ -1,16 +1,19 @@
 use crate::game::CursorPos;
 use bevy::app::{App, Last, Plugin, Startup, Update};
 use bevy::math::Vec3;
-use bevy::prelude::{default, Camera2d, Camera2dBundle, Commands, Component, OrthographicProjection, Query, Reflect, ResMut, Transform, With, Time, Res, KeyCode, GamepadButtonType};
+use bevy::prelude::{
+    default, Camera2d, Camera2dBundle, Commands, Component, GamepadButtonType, KeyCode,
+    OrthographicProjection, Query, Reflect, Res, ResMut, Time, Transform, With,
+};
 use bevy::render::camera::ScalingMode;
 use leafwing_input_manager::action_state::ActionState;
+use leafwing_input_manager::axislike::{DeadZoneShape, DualAxis};
 use leafwing_input_manager::buttonlike::MouseWheelDirection;
 use leafwing_input_manager::input_map::InputMap;
 use leafwing_input_manager::plugin::InputManagerPlugin;
-use leafwing_input_manager::{Actionlike, InputManagerBundle};
-use leafwing_input_manager::axislike::{DeadZoneShape, DualAxis};
 use leafwing_input_manager::prelude::UserInput;
 use leafwing_input_manager::user_input::InputKind;
+use leafwing_input_manager::{Actionlike, InputManagerBundle};
 
 const SPEED: f32 = 200.0;
 const SUPERSPEED_MULTIPLIER: f32 = 5.0;
@@ -37,7 +40,7 @@ pub enum CameraAction {
     Up,
     Down,
     Left,
-    Right
+    Right,
 }
 
 fn init(mut commands: Commands) {
@@ -94,14 +97,13 @@ fn move_camera(
                 Vec3::ZERO
             }
         } else {
-           dir * speed * time.delta_seconds()
+            dir * speed * time.delta_seconds()
         }
     };
 
     transform.translation += delta;
     cursor_pos.world += delta.truncate();
 }
-
 
 fn zoom_camera(
     mut query: Query<(&mut OrthographicProjection, &ActionState<CameraAction>), With<Camera2d>>,
@@ -111,7 +113,7 @@ fn zoom_camera(
     if action_state.pressed(CameraAction::ZoomIn) {
         projection.scaling_mode = ScalingMode::WindowSize(2.0)
     } else if action_state.pressed(CameraAction::ZoomOut) {
-        projection.scaling_mode = ScalingMode::WindowSize(1.0)
+        projection.scaling_mode = ScalingMode::WindowSize(0.25)
     }
 }
 

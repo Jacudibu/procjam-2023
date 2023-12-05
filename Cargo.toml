@@ -20,6 +20,7 @@ bevy = "0.12"
 leafwing-input-manager = "0.11.2"
 bevy_screen_diagnostics = "0.4.0"
 bevy_ecs_tilemap = "0.12"
+noise = "0.8.2"
 
 [patch.crates-io]
 bevy_ecs_tilemap = { git = "https://github.com/divark/bevy_ecs_tilemap", branch = "0.12-fixes" }

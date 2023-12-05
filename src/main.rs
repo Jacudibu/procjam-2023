@@ -1,6 +1,7 @@
 mod camera;
 mod game;
 mod game_map;
+mod noise_generator;
 
 use bevy::prelude::*;
 use bevy::window::PresentMode;

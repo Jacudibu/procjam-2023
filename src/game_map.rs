@@ -1,4 +1,5 @@
 use crate::game::CursorPos;
+use crate::noise_generator::NoiseGenerator;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use std::collections::HashSet;
@@ -6,7 +7,7 @@ use std::collections::HashSet;
 // Right now mostly sticking to the example code found at https://github.com/divark/bevy_ecs_tilemap/blob/0.12-fixes/examples/
 
 const TILE_SIZE: TilemapTileSize = TilemapTileSize { x: 16.0, y: 16.0 };
-const CHUNK_SIZE: UVec2 = UVec2 { x: 32, y: 32 };
+pub const CHUNK_SIZE: UVec2 = UVec2 { x: 32, y: 32 };
 const RENDER_CHUNK_SIZE: UVec2 = UVec2 {
     x: CHUNK_SIZE.x * 2,
     y: CHUNK_SIZE.y * 2,
@@ -24,22 +25,26 @@ impl Plugin for GameMapPlugin {
                 render_chunk_size: RENDER_CHUNK_SIZE,
                 ..Default::default()
             })
+            .insert_resource(NoiseGenerator::new(42))
             .add_plugins(TilemapPlugin)
             .add_systems(Update, spawn_chunks_around_camera)
             .add_systems(Update, despawn_out_of_range_chunks)
-            .add_systems(Update, highlight_tile_color);
+            .add_systems(Update, highlight_tile_below_cursor);
     }
 }
 
 #[derive(Component)]
 struct HighlightedTile;
 
-fn spawn_chunk(commands: &mut Commands, asset_server: &AssetServer, chunk_pos: IVec2) {
+fn spawn_chunk(
+    commands: &mut Commands,
+    asset_server: &AssetServer,
+    chunk_pos: IVec2,
+    noise: &Res<NoiseGenerator>,
+) {
     let tilemap_entity = commands.spawn_empty().id();
     let mut tile_storage = TileStorage::empty(CHUNK_SIZE.into());
 
-    // Spawn the elements of the tilemap.
-    // Alternatively, you can use helpers::filling::fill_tilemap.
     for x in 0..CHUNK_SIZE.x {
         for y in 0..CHUNK_SIZE.y {
             let tile_pos = TilePos { x, y };
@@ -47,6 +52,7 @@ fn spawn_chunk(commands: &mut Commands, asset_server: &AssetServer, chunk_pos: I
                 .spawn(TileBundle {
                     position: tile_pos,
                     tilemap_id: TilemapId(tilemap_entity),
+                    color: TileColor(noise.get_color(chunk_pos, x, y)),
                     ..Default::default()
                 })
                 .id();
@@ -90,6 +96,7 @@ fn spawn_chunks_around_camera(
     asset_server: Res<AssetServer>,
     camera_query: Query<&Transform, With<Camera2d>>,
     mut chunk_manager: ResMut<ChunkManager>,
+    noise: Res<NoiseGenerator>,
 ) {
     for transform in camera_query.iter() {
         let camera_chunk_pos = camera_pos_to_chunk_pos(&transform.translation.xy());
@@ -103,7 +110,7 @@ fn spawn_chunks_around_camera(
                 if !chunk_manager.spawned_chunks.contains(&chunk) {
                     info!("Spawning chunk {}", &chunk);
                     chunk_manager.spawned_chunks.insert(chunk);
-                    spawn_chunk(&mut commands, &asset_server, chunk);
+                    spawn_chunk(&mut commands, &asset_server, chunk, &noise);
                 }
             }
         }
@@ -131,7 +138,7 @@ fn despawn_out_of_range_chunks(
     }
 }
 
-fn highlight_tile_color(
+fn highlight_tile_below_cursor(
     mut commands: Commands,
     cursor_pos: Res<CursorPos>,
     tilemap_q: Query<(
@@ -142,15 +149,10 @@ fn highlight_tile_color(
         &Transform,
     )>,
     highlighted_tiles_q: Query<Entity, With<HighlightedTile>>,
-    mut all_tile_colors: Query<&mut TileColor>,
 ) {
     // Un-highlight any previously highlighted tile labels.
     for entity in highlighted_tiles_q.iter() {
-        if let Ok(mut tile_color) = all_tile_colors.get_mut(entity) {
-            tile_color.0 = Color::WHITE;
-
-            commands.entity(entity).remove::<HighlightedTile>();
-        }
+        commands.entity(entity).remove::<HighlightedTile>();
     }
 
     let cursor_pos: Vec4 = Vec4::from((cursor_pos.world, 0.0, 1.0));
@@ -170,10 +172,7 @@ fn highlight_tile_color(
         ) {
             // Highlight the relevant tile's label
             if let Some(tile_entity) = tile_storage.get(&tile_pos) {
-                if let Ok(mut tile_color) = all_tile_colors.get_mut(tile_entity) {
-                    tile_color.0 = Color::GREEN;
-                    commands.entity(tile_entity).insert(HighlightedTile);
-                }
+                commands.entity(tile_entity).insert(HighlightedTile);
             }
         }
     }
