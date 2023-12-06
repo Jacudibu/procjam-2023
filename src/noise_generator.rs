@@ -21,7 +21,7 @@ impl NoiseGenerator {
 
         TileData {
             height: self.height.get(Self::get_point(x, y, 0.035)) as f32,
-            biome: self.biome.get(Self::get_point(x, y, 0.022)) as f32,
+            humidity: self.biome.get(Self::get_point(x, y, 0.022)) as f32,
         }
     }
 

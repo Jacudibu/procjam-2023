@@ -1,3 +1,4 @@
+mod biome;
 mod camera;
 mod game;
 mod game_map;
