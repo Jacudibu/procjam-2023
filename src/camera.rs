@@ -10,7 +10,7 @@ use leafwing_input_manager::prelude::UserInput;
 use leafwing_input_manager::user_input::InputKind;
 use leafwing_input_manager::{Actionlike, InputManagerBundle};
 
-const SPEED: f32 = 200.0;
+const SPEED: f32 = 1000.0;
 const SUPERSPEED_MULTIPLIER: f32 = 5.0;
 
 pub struct CameraPlugin;
