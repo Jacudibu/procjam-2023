@@ -1,10 +1,5 @@
 use crate::game::CursorPos;
-use bevy::app::{App, Last, Plugin, Startup, Update};
-use bevy::math::Vec3;
-use bevy::prelude::{
-    default, Camera2d, Camera2dBundle, Commands, Component, GamepadButtonType, KeyCode,
-    OrthographicProjection, Query, Reflect, Res, ResMut, Time, Transform, With,
-};
+use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
 use leafwing_input_manager::action_state::ActionState;
 use leafwing_input_manager::axislike::{DeadZoneShape, DualAxis};

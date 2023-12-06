@@ -15,9 +15,6 @@ const RENDER_CHUNK_SIZE: UVec2 = UVec2 {
     y: CHUNK_SIZE.y * 2,
 };
 
-const CHUNK_SPAWN_DISTANCE: i32 = 3;
-const CHUNK_DESPAWN_DISTANCE: i32 = CHUNK_SPAWN_DISTANCE + 1;
-
 pub struct GameMapPlugin;
 impl Plugin for GameMapPlugin {
     fn build(&self, app: &mut App) {
@@ -114,20 +111,28 @@ fn camera_pos_to_chunk_pos(camera_pos: &Vec2) -> IVec2 {
     camera_pos / (chunk_size * tile_size)
 }
 
+fn calculate_ideal_chunk_spawn_distance(camera_rect: &Rect) -> IVec2 {
+    IVec2::new(
+        (camera_rect.width() as i32 / (CHUNK_SIZE.x as i32 * TILE_SIZE.x as i32)) + 1,
+        (camera_rect.height() as i32 / (CHUNK_SIZE.y as i32 * TILE_SIZE.y as i32)) + 1,
+    )
+}
+
 fn spawn_chunks_around_camera(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    camera_query: Query<&Transform, With<Camera2d>>,
+    camera_query: Query<(&Transform, &OrthographicProjection), With<Camera2d>>,
     mut chunk_manager: ResMut<ChunkManager>,
     noise: Res<NoiseGenerator>,
 ) {
-    for transform in camera_query.iter() {
+    for (transform, projection) in camera_query.iter() {
+        let chunk_spawn_distance = calculate_ideal_chunk_spawn_distance(&projection.area);
         let camera_chunk_pos = camera_pos_to_chunk_pos(&transform.translation.xy());
-        for y in
-            (camera_chunk_pos.y - CHUNK_SPAWN_DISTANCE)..(camera_chunk_pos.y + CHUNK_SPAWN_DISTANCE)
+        for y in (camera_chunk_pos.y - chunk_spawn_distance.y as i32)
+            ..(camera_chunk_pos.y + chunk_spawn_distance.y as i32)
         {
-            for x in (camera_chunk_pos.x - CHUNK_SPAWN_DISTANCE)
-                ..(camera_chunk_pos.x + CHUNK_SPAWN_DISTANCE)
+            for x in (camera_chunk_pos.x - chunk_spawn_distance.x as i32)
+                ..(camera_chunk_pos.x + chunk_spawn_distance.x as i32)
             {
                 let chunk = IVec2::new(x, y);
                 if !chunk_manager.spawned_chunks.contains(&chunk) {
@@ -142,19 +147,20 @@ fn spawn_chunks_around_camera(
 
 fn despawn_out_of_range_chunks(
     mut commands: Commands,
-    camera_query: Query<&Transform, With<Camera2d>>,
+    camera_query: Query<(&Transform, &OrthographicProjection), With<Camera2d>>,
     chunks_query: Query<(Entity, &ChunkData)>,
     mut chunk_manager: ResMut<ChunkManager>,
 ) {
-    for camera_transform in camera_query.iter() {
+    for (camera_transform, projection) in camera_query.iter() {
+        let chunk_spawn_distance = calculate_ideal_chunk_spawn_distance(&projection.area);
         let camera_chunk_pos = camera_pos_to_chunk_pos(&camera_transform.translation.xy());
         for (entity, chunk_data) in chunks_query.iter() {
             let chunk_pos = chunk_data.position;
-            let distance = max(
+            let distance = IVec2::new(
                 (chunk_pos.x - camera_chunk_pos.x).abs(),
                 (chunk_pos.y - camera_chunk_pos.y).abs(),
             );
-            if distance > CHUNK_DESPAWN_DISTANCE {
+            if distance.x > chunk_spawn_distance.x + 1 || distance.y > chunk_spawn_distance.y + 1 {
                 info!("Despawning chunk {}", &chunk_pos);
                 chunk_manager.spawned_chunks.remove(&chunk_pos);
                 commands.entity(entity).despawn_recursive();
