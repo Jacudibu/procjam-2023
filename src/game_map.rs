@@ -1,5 +1,6 @@
 use crate::game::CursorPos;
 use crate::noise_generator::NoiseGenerator;
+use crate::tile_data::TileType;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
 use std::collections::HashSet;
@@ -40,6 +41,16 @@ pub struct ChunkData {
     pub position: IVec2,
 }
 
+fn tile_type_to_texture_index(tile_type: &TileType) -> TileTextureIndex {
+    match tile_type {
+        TileType::Water => TileTextureIndex(0),
+        TileType::Sand => TileTextureIndex(1),
+        TileType::Grass => TileTextureIndex(2),
+        TileType::Stone => TileTextureIndex(3),
+        TileType::DeepWater => TileTextureIndex(4),
+    }
+}
+
 fn spawn_chunk(
     commands: &mut Commands,
     asset_server: &AssetServer,
@@ -53,12 +64,12 @@ fn spawn_chunk(
         for y in 0..CHUNK_SIZE.y {
             let tile_pos = TilePos { x, y };
             let tile_data = noise.get_tile_data(chunk_pos, x, y);
+            let tile_type = tile_data.get_tile_type();
             let tile_entity = commands
                 .spawn(TileBundle {
                     position: tile_pos,
                     tilemap_id: TilemapId(tilemap_entity),
-                    color: TileColor(tile_data.get_color()),
-                    texture_index: TileTextureIndex(4),
+                    texture_index: tile_type_to_texture_index(&tile_type),
                     ..Default::default()
                 })
                 .insert(tile_data)
