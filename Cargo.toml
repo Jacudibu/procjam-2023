@@ -1,6 +1,6 @@
 [package]
-name = "plant-reaper"
-homepage = "https://github.com/Jacudibu/plant-reaper"
+name = "procjam-2023"
+homepage = "https://github.com/Jacudibu/procjam-2023"
 version = "0.1.0"
 edition = "2021"
 
@@ -21,6 +21,7 @@ leafwing-input-manager = "0.11.2"
 bevy_screen_diagnostics = "0.4.0"
 bevy_ecs_tilemap = "0.12"
 noise = "0.8.2"
+bevy_egui = "0.23.0"
 
 [patch.crates-io]
 bevy_ecs_tilemap = { git = "https://github.com/divark/bevy_ecs_tilemap", branch = "0.12-fixes" }

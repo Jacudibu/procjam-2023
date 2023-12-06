@@ -1,5 +1,6 @@
-use crate::camera::{CameraPlugin};
+use crate::camera::CameraPlugin;
 use crate::game_map::GameMapPlugin;
+use crate::game_ui::GameUIPlugin;
 use bevy::prelude::*;
 
 pub struct GamePlugin;
@@ -8,6 +9,7 @@ impl Plugin for GamePlugin {
         app.init_resource::<CursorPos>()
             .add_plugins(GameMapPlugin)
             .add_plugins(CameraPlugin)
+            .add_plugins(GameUIPlugin)
             .add_systems(First, update_cursor_pos);
     }
 }

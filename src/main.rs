@@ -1,6 +1,7 @@
 mod camera;
 mod game;
 mod game_map;
+mod game_ui;
 mod noise_generator;
 
 use bevy::prelude::*;

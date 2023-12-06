@@ -34,7 +34,11 @@ impl Plugin for GameMapPlugin {
 }
 
 #[derive(Component)]
-struct HighlightedTile;
+pub struct HighlightedTile;
+#[derive(Component)]
+pub struct ChunkData {
+    pub position: IVec2,
+}
 
 fn spawn_chunk(
     commands: &mut Commands,
@@ -53,6 +57,7 @@ fn spawn_chunk(
                     position: tile_pos,
                     tilemap_id: TilemapId(tilemap_entity),
                     color: TileColor(noise.get_color(chunk_pos, x, y)),
+                    texture_index: TileTextureIndex(4),
                     ..Default::default()
                 })
                 .id();
@@ -68,15 +73,20 @@ fn spawn_chunk(
     ));
 
     let tile_texture: Handle<Image> = asset_server.load("sprites/tiles.png");
-    commands.entity(tilemap_entity).insert(TilemapBundle {
-        grid_size: TILE_SIZE.into(),
-        size: CHUNK_SIZE.into(),
-        storage: tile_storage,
-        texture: TilemapTexture::Single(tile_texture),
-        tile_size: TILE_SIZE,
-        transform,
-        ..Default::default()
-    });
+    commands
+        .entity(tilemap_entity)
+        .insert(TilemapBundle {
+            grid_size: TILE_SIZE.into(),
+            size: CHUNK_SIZE.into(),
+            storage: tile_storage,
+            texture: TilemapTexture::Single(tile_texture),
+            tile_size: TILE_SIZE,
+            transform,
+            ..Default::default()
+        })
+        .insert(ChunkData {
+            position: chunk_pos,
+        });
 }
 
 #[derive(Default, Debug, Resource)]
