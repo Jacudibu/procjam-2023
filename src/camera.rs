@@ -105,15 +105,27 @@ fn move_camera(
     cursor_pos.world += delta.truncate();
 }
 
+const MAX_ZOOM: f32 = 2.0;
+const MIN_ZOOM: f32 = 0.25;
+
 fn zoom_camera(
     mut query: Query<(&mut OrthographicProjection, &ActionState<CameraAction>), With<Camera2d>>,
 ) {
     let (mut projection, action_state) = query.single_mut();
 
-    if action_state.pressed(CameraAction::ZoomIn) {
-        projection.scaling_mode = ScalingMode::WindowSize(2.0)
-    } else if action_state.pressed(CameraAction::ZoomOut) {
-        projection.scaling_mode = ScalingMode::WindowSize(0.25)
+    let current_scaling = match projection.scaling_mode {
+        ScalingMode::Fixed { .. } => 1.0,
+        ScalingMode::WindowSize(x) => x,
+        ScalingMode::AutoMin { .. } => 1.0,
+        ScalingMode::AutoMax { .. } => 1.0,
+        ScalingMode::FixedVertical(_) => 1.0,
+        ScalingMode::FixedHorizontal(_) => 1.0,
+    };
+
+    if action_state.pressed(CameraAction::ZoomIn) && current_scaling < MAX_ZOOM {
+        projection.scaling_mode = ScalingMode::WindowSize(current_scaling + 0.25)
+    } else if action_state.pressed(CameraAction::ZoomOut) && current_scaling > MIN_ZOOM {
+        projection.scaling_mode = ScalingMode::WindowSize(current_scaling - 0.25)
     }
 }
 
