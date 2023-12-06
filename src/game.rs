@@ -22,8 +22,8 @@ pub struct CursorPos {
 impl Default for CursorPos {
     fn default() -> Self {
         CursorPos {
-            screen: Vec2::new(-1000.0, -1000.0),
-            world: Vec2::new(-1000.0, -1000.0),
+            screen: Vec2::new(-10000.0, -10000.0),
+            world: Vec2::new(-10000.0, -10000.0),
         }
     }
 }

@@ -3,6 +3,7 @@ mod game;
 mod game_map;
 mod game_ui;
 mod noise_generator;
+mod tile_data;
 
 use bevy::prelude::*;
 use bevy::window::PresentMode;

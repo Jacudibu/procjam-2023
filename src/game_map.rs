@@ -52,14 +52,16 @@ fn spawn_chunk(
     for x in 0..CHUNK_SIZE.x {
         for y in 0..CHUNK_SIZE.y {
             let tile_pos = TilePos { x, y };
+            let tile_data = noise.get_tile_data(chunk_pos, x, y);
             let tile_entity = commands
                 .spawn(TileBundle {
                     position: tile_pos,
                     tilemap_id: TilemapId(tilemap_entity),
-                    color: TileColor(noise.get_color(chunk_pos, x, y)),
+                    color: TileColor(tile_data.get_color()),
                     texture_index: TileTextureIndex(4),
                     ..Default::default()
                 })
+                .insert(tile_data)
                 .id();
             commands.entity(tilemap_entity).add_child(tile_entity);
             tile_storage.set(&tile_pos, tile_entity);
