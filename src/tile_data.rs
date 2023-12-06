@@ -13,23 +13,18 @@ pub enum TileType {
 #[derive(Component)]
 pub struct TileData {
     pub height: f32,
+    pub biome: f32,
 }
 impl TileData {
     pub fn get_tile_type(&self) -> TileType {
-        if self.height < -0.4 {
-            return TileType::DeepWater;
-        }
-        if self.height < -0.3 {
-            return TileType::Water;
-        }
-        if self.height < -0.1 {
-            return TileType::Sand;
-        }
-        if self.height < 0.4 {
-            return TileType::Grass;
-        }
+        let biome = Biome {
+            deep_water: -0.4,
+            water: -0.3,
+            sand: -0.1,
+            grass: 0.4,
+        };
 
-        return TileType::Stone;
+        return biome.evaluate(self.height);
     }
 
     pub fn get_color(&self) -> Color {
@@ -38,6 +33,37 @@ impl TileData {
 }
 impl std::fmt::Display for TileData {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Height: {}\n-> {:?}", self.height, self.get_tile_type())
+        write!(
+            f,
+            "Height: {}\nBiome: {}\n-> {:?}",
+            self.height,
+            self.biome,
+            self.get_tile_type()
+        )
+    }
+}
+
+pub struct Biome {
+    deep_water: f32,
+    water: f32,
+    sand: f32,
+    grass: f32,
+}
+impl Biome {
+    pub fn evaluate(&self, height: f32) -> TileType {
+        if height < self.deep_water {
+            return TileType::DeepWater;
+        }
+        if height < self.water {
+            return TileType::Water;
+        }
+        if height < self.sand {
+            return TileType::Sand;
+        }
+        if height < self.grass {
+            return TileType::Grass;
+        }
+
+        return TileType::Stone;
     }
 }
