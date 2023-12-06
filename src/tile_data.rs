@@ -17,14 +17,32 @@ pub struct TileData {
 }
 impl TileData {
     pub fn get_tile_type(&self) -> TileType {
-        let biome = Biome {
+        let ocean = Biome {
+            deep_water: -0.1,
+            water: 0.1,
+            sand: 0.3,
+            grass: 0.3,
+        };
+
+        let forest = Biome {
             deep_water: -0.4,
             water: -0.3,
-            sand: -0.1,
+            sand: -0.2,
             grass: 0.4,
         };
 
-        return biome.evaluate(self.height);
+        let desert = Biome {
+            deep_water: -0.6,
+            water: -0.5,
+            sand: 0.2,
+            grass: 0.2,
+        };
+
+        if self.biome < 0.0 {
+            forest.evaluate_multibiome(&ocean, self.height, 1.0 + self.biome)
+        } else {
+            forest.evaluate_multibiome(&desert, self.height, 1.0 - self.biome)
+        }
     }
 
     pub fn get_color(&self) -> Color {
@@ -65,5 +83,22 @@ impl Biome {
         }
 
         return TileType::Stone;
+    }
+
+    pub fn evaluate_multibiome(&self, other: &Self, height: f32, strength_this: f32) -> TileType {
+        if height < self.deep_water * strength_this + other.deep_water * (1.0 - strength_this) {
+            return TileType::DeepWater;
+        }
+        if height < self.water * strength_this + other.water * (1.0 - strength_this) {
+            return TileType::Water;
+        }
+        if height < self.sand * strength_this + other.sand * (1.0 - strength_this) {
+            return TileType::Sand;
+        }
+        if height < self.grass * strength_this + other.grass * (1.0 - strength_this) {
+            return TileType::Grass;
+        }
+
+        TileType::Stone
     }
 }

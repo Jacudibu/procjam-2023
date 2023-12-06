@@ -1,17 +1,17 @@
 use crate::tile_data::TileData;
 use bevy::prelude::*;
-use noise::NoiseFn;
+use noise::{MultiFractal, NoiseFn};
 
 #[derive(Resource)]
 pub struct NoiseGenerator {
     height: noise::OpenSimplex,
-    biome: noise::OpenSimplex,
+    biome: noise::BasicMulti<noise::OpenSimplex>,
 }
 impl NoiseGenerator {
     pub fn new(seed: u32) -> Self {
         NoiseGenerator {
             height: noise::OpenSimplex::new(seed),
-            biome: noise::OpenSimplex::new(seed),
+            biome: noise::BasicMulti::new(seed).set_frequency(5.0),
         }
     }
 
