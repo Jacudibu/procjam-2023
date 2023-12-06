@@ -3,7 +3,6 @@ use crate::noise_generator::NoiseGenerator;
 use crate::tile_data::TileType;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
-use std::cmp::max;
 use std::collections::HashSet;
 
 // Right now mostly sticking to the example code found at https://github.com/divark/bevy_ecs_tilemap/blob/0.12-fixes/examples/
@@ -128,17 +127,18 @@ fn spawn_chunks_around_camera(
     for (transform, projection) in camera_query.iter() {
         let chunk_spawn_distance = calculate_ideal_chunk_spawn_distance(&projection.area);
         let camera_chunk_pos = camera_pos_to_chunk_pos(&transform.translation.xy());
-        for y in (camera_chunk_pos.y - chunk_spawn_distance.y as i32)
-            ..(camera_chunk_pos.y + chunk_spawn_distance.y as i32)
+        for y in (camera_chunk_pos.y - chunk_spawn_distance.y)
+            ..(camera_chunk_pos.y + chunk_spawn_distance.y)
         {
-            for x in (camera_chunk_pos.x - chunk_spawn_distance.x as i32)
-                ..(camera_chunk_pos.x + chunk_spawn_distance.x as i32)
+            for x in (camera_chunk_pos.x - chunk_spawn_distance.x)
+                ..(camera_chunk_pos.x + chunk_spawn_distance.x)
             {
                 let chunk = IVec2::new(x, y);
                 if !chunk_manager.spawned_chunks.contains(&chunk) {
                     info!("Spawning chunk {}", &chunk);
                     chunk_manager.spawned_chunks.insert(chunk);
                     spawn_chunk(&mut commands, &asset_server, chunk, &noise);
+                    return;
                 }
             }
         }
@@ -164,6 +164,7 @@ fn despawn_out_of_range_chunks(
                 info!("Despawning chunk {}", &chunk_pos);
                 chunk_manager.spawned_chunks.remove(&chunk_pos);
                 commands.entity(entity).despawn_recursive();
+                return;
             }
         }
     }
