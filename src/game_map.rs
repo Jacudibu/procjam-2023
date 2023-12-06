@@ -3,6 +3,7 @@ use crate::noise_generator::NoiseGenerator;
 use crate::tile_data::TileType;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
+use std::cmp::max;
 use std::collections::HashSet;
 
 // Right now mostly sticking to the example code found at https://github.com/divark/bevy_ecs_tilemap/blob/0.12-fixes/examples/
@@ -15,8 +16,7 @@ const RENDER_CHUNK_SIZE: UVec2 = UVec2 {
 };
 
 const CHUNK_SPAWN_DISTANCE: i32 = 3;
-const CHUNK_DESPAWN_DISTANCE: f32 =
-    CHUNK_SIZE.x as f32 * TILE_SIZE.x * (CHUNK_SPAWN_DISTANCE + 2) as f32;
+const CHUNK_DESPAWN_DISTANCE: i32 = CHUNK_SPAWN_DISTANCE + 1;
 
 pub struct GameMapPlugin;
 impl Plugin for GameMapPlugin {
@@ -143,18 +143,20 @@ fn spawn_chunks_around_camera(
 fn despawn_out_of_range_chunks(
     mut commands: Commands,
     camera_query: Query<&Transform, With<Camera2d>>,
-    chunks_query: Query<(Entity, &Transform), With<TileStorage>>,
+    chunks_query: Query<(Entity, &ChunkData)>,
     mut chunk_manager: ResMut<ChunkManager>,
 ) {
     for camera_transform in camera_query.iter() {
-        for (entity, chunk_transform) in chunks_query.iter() {
-            let chunk_pos = chunk_transform.translation.xy();
-            let distance = camera_transform.translation.xy().distance(chunk_pos);
+        let camera_chunk_pos = camera_pos_to_chunk_pos(&camera_transform.translation.xy());
+        for (entity, chunk_data) in chunks_query.iter() {
+            let chunk_pos = chunk_data.position;
+            let distance = max(
+                (chunk_pos.x - camera_chunk_pos.x).abs(),
+                (chunk_pos.y - camera_chunk_pos.y).abs(),
+            );
             if distance > CHUNK_DESPAWN_DISTANCE {
-                let x = (chunk_pos.x / (CHUNK_SIZE.x as f32 * TILE_SIZE.x)).floor() as i32;
-                let y = (chunk_pos.y / (CHUNK_SIZE.y as f32 * TILE_SIZE.y)).floor() as i32;
-                info!("Despawning chunk [{}, {}]", x, y);
-                chunk_manager.spawned_chunks.remove(&IVec2::new(x, y));
+                info!("Despawning chunk {}", &chunk_pos);
+                chunk_manager.spawned_chunks.remove(&chunk_pos);
                 commands.entity(entity).despawn_recursive();
             }
         }
