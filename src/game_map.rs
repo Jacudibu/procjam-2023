@@ -1,4 +1,5 @@
 use crate::game::CursorPos;
+use crate::game_ui::RegenerateMapEvent;
 use crate::noise_generator::NoiseGenerator;
 use crate::tile_data::TileType;
 use bevy::prelude::*;
@@ -26,7 +27,8 @@ impl Plugin for GameMapPlugin {
             .add_plugins(TilemapPlugin)
             .add_systems(Update, spawn_chunks_around_camera)
             .add_systems(Update, despawn_out_of_range_chunks)
-            .add_systems(Update, highlight_tile_below_cursor);
+            .add_systems(Update, highlight_tile_below_cursor)
+            .add_systems(First, regenerate_map_event_listener);
     }
 }
 
@@ -167,6 +169,21 @@ fn despawn_out_of_range_chunks(
                 return;
             }
         }
+    }
+}
+
+fn regenerate_map_event_listener(
+    mut commands: Commands,
+    mut event: EventReader<RegenerateMapEvent>,
+    mut chunk_manager: ResMut<ChunkManager>,
+    chunks_query: Query<Entity, With<ChunkData>>,
+) {
+    for _ in event.read() {
+        for entity in chunks_query.iter() {
+            commands.entity(entity).despawn_recursive();
+        }
+
+        chunk_manager.spawned_chunks.clear();
     }
 }
 

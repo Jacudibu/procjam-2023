@@ -11,6 +11,7 @@ impl Plugin for GameUIPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(EguiPlugin)
             .add_systems(Update, ui_system)
+            .add_event::<RegenerateMapEvent>()
             .insert_resource(UnappliedSettings {
                 map_generator_values: NoiseValues::default(),
             });
@@ -22,12 +23,16 @@ pub struct UnappliedSettings {
     pub map_generator_values: NoiseValues,
 }
 
+#[derive(Event)]
+pub struct RegenerateMapEvent;
+
 fn ui_system(
     mut contexts: EguiContexts,
     tile_query: Query<(&TilePos, &TilemapId, &TileData), With<HighlightedTile>>,
     tilemap_query: Query<(Entity, &ChunkData)>,
     mut map_gen: ResMut<NoiseGenerator>,
     mut unapplied_settings: ResMut<UnappliedSettings>,
+    mut regenerate_map_event: EventWriter<RegenerateMapEvent>,
 ) {
     if let Ok((tile_pos, tilemap_id, tile_data)) = tile_query.get_single() {
         if let Ok((_, chunk_data)) = tilemap_query.get(tilemap_id.0) {
@@ -73,5 +78,6 @@ fn ui_system(
 
     if apply {
         map_gen.values = unapplied_settings.map_generator_values;
+        regenerate_map_event.send(RegenerateMapEvent);
     }
 }
