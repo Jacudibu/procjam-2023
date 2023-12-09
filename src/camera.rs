@@ -10,8 +10,8 @@ use leafwing_input_manager::prelude::UserInput;
 use leafwing_input_manager::user_input::InputKind;
 use leafwing_input_manager::{Actionlike, InputManagerBundle};
 
-const SPEED: f32 = 1000.0;
-const SUPERSPEED_MULTIPLIER: f32 = 5.0;
+const SPEED: f32 = 5000.0;
+const SUPERSPEED_MULTIPLIER: f32 = 3.0;
 
 pub struct CameraPlugin;
 impl Plugin for CameraPlugin {
@@ -39,8 +39,11 @@ pub enum CameraAction {
 }
 
 fn init(mut commands: Commands) {
+    let mut camera = Camera2dBundle::default();
+    camera.projection.scaling_mode = ScalingMode::WindowSize(MIN_ZOOM);
+
     commands
-        .spawn(Camera2dBundle::default())
+        .spawn(camera)
         .insert(InputManagerBundle::<CameraAction> {
             input_map: default_input_map_camera(),
             ..default()
