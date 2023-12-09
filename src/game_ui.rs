@@ -1,21 +1,33 @@
 use crate::game_map::{ChunkData, HighlightedTile, CHUNK_SIZE};
+use crate::noise_generator::{NoiseGenerator, NoiseValues};
 use crate::tile_data::TileData;
 use bevy::prelude::*;
 use bevy_ecs_tilemap::prelude::*;
-use bevy_egui::egui::Pos2;
+use bevy_egui::egui::{Align2, Grid, Pos2, Widget};
 use bevy_egui::*;
 
 pub struct GameUIPlugin;
 impl Plugin for GameUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(EguiPlugin).add_systems(Update, ui_system);
+        app.add_plugins(EguiPlugin)
+            .add_systems(Update, ui_system)
+            .insert_resource(UnappliedSettings {
+                map_generator_values: NoiseValues::default(),
+            });
     }
+}
+
+#[derive(Resource)]
+pub struct UnappliedSettings {
+    pub map_generator_values: NoiseValues,
 }
 
 fn ui_system(
     mut contexts: EguiContexts,
     tile_query: Query<(&TilePos, &TilemapId, &TileData), With<HighlightedTile>>,
     tilemap_query: Query<(Entity, &ChunkData)>,
+    mut map_gen: ResMut<NoiseGenerator>,
+    mut unapplied_settings: ResMut<UnappliedSettings>,
 ) {
     if let Ok((tile_pos, tilemap_id, tile_data)) = tile_query.get_single() {
         if let Ok((_, chunk_data)) = tilemap_query.get(tilemap_id.0) {
@@ -38,5 +50,28 @@ fn ui_system(
                 ));
             });
         }
+    }
+
+    let mut apply = false;
+    egui::Window::new("Settings")
+        .collapsible(false)
+        .resizable(false)
+        .anchor(Align2::LEFT_BOTTOM, egui::Vec2::new(0.0, 0.0))
+        .fixed_pos(Pos2::new(5.0, 5.0))
+        .show(contexts.ctx_mut(), |ui| {
+            Grid::new("table").show(ui, |ui| {
+                ui.label("Biome Resolution:");
+                egui::Slider::new(
+                    &mut unapplied_settings.map_generator_values.resolution,
+                    0.001..=0.1,
+                )
+                .ui(ui);
+                ui.end_row();
+                apply = ui.button("Apply").clicked();
+            })
+        });
+
+    if apply {
+        map_gen.values = unapplied_settings.map_generator_values;
     }
 }

@@ -4,12 +4,27 @@ use noise::{MultiFractal, NoiseFn};
 
 #[derive(Resource)]
 pub struct NoiseGenerator {
+    pub values: NoiseValues,
+
     height: noise::OpenSimplex,
     biome: noise::BasicMulti<noise::OpenSimplex>,
 }
+
+#[derive(Copy, Clone)]
+pub struct NoiseValues {
+    pub resolution: f64,
+}
+impl Default for NoiseValues {
+    fn default() -> Self {
+        NoiseValues { resolution: 0.035 }
+    }
+}
+
 impl NoiseGenerator {
     pub fn new(seed: u32) -> Self {
         NoiseGenerator {
+            values: NoiseValues::default(),
+
             height: noise::OpenSimplex::new(seed),
             biome: noise::BasicMulti::new(seed).set_frequency(5.0),
         }
@@ -20,7 +35,9 @@ impl NoiseGenerator {
         let y = (chunk_pos.y as f64 * crate::game_map::CHUNK_SIZE.y as f64) + tile_pos_y as f64;
 
         TileData {
-            height: self.height.get(Self::get_point(x, y, 0.035)) as f32,
+            height: self
+                .height
+                .get(Self::get_point(x, y, self.values.resolution)) as f32,
             humidity: self.biome.get(Self::get_point(x, y, 0.022)) as f32,
         }
     }
