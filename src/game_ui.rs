@@ -13,6 +13,7 @@ impl Plugin for GameUIPlugin {
             .add_systems(Update, ui_system)
             .add_event::<RegenerateMapEvent>()
             .insert_resource(UnappliedSettings {
+                seed: String::from("42"),
                 map_generator_values: NoiseValues::default(),
             });
     }
@@ -21,6 +22,7 @@ impl Plugin for GameUIPlugin {
 #[derive(Resource)]
 pub struct UnappliedSettings {
     pub map_generator_values: NoiseValues,
+    pub seed: String,
 }
 
 #[derive(Event)]
@@ -65,6 +67,10 @@ fn ui_system(
         .fixed_pos(Pos2::new(5.0, 5.0))
         .show(contexts.ctx_mut(), |ui| {
             Grid::new("table").show(ui, |ui| {
+                ui.label("Seed:");
+                ui.text_edit_singleline(&mut unapplied_settings.seed);
+                ui.end_row();
+
                 ui.label("Biome Resolution:");
                 egui::Slider::new(
                     &mut unapplied_settings.map_generator_values.resolution,
@@ -72,12 +78,17 @@ fn ui_system(
                 )
                 .ui(ui);
                 ui.end_row();
-                apply = ui.button("Apply").clicked();
-            })
+            });
+
+            apply = ui.button("Apply").clicked();
         });
 
     if apply {
-        map_gen.values = unapplied_settings.map_generator_values;
+        let new_map = NoiseGenerator::new(
+            &unapplied_settings.seed,
+            unapplied_settings.map_generator_values,
+        );
+        map_gen.set_if_neq(new_map);
         regenerate_map_event.send(RegenerateMapEvent);
     }
 }

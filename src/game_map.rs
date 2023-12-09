@@ -23,7 +23,7 @@ impl Plugin for GameMapPlugin {
                 render_chunk_size: RENDER_CHUNK_SIZE,
                 ..Default::default()
             })
-            .insert_resource(NoiseGenerator::new(42))
+            .insert_resource(NoiseGenerator::default())
             .add_plugins(TilemapPlugin)
             .add_systems(Update, spawn_chunks_around_camera)
             .add_systems(Update, despawn_out_of_range_chunks)

@@ -1,6 +1,6 @@
 use crate::tile_data::TileData;
 use bevy::prelude::*;
-use noise::{MultiFractal, NoiseFn};
+use noise::{MultiFractal, NoiseFn, Seedable};
 
 #[derive(Resource)]
 pub struct NoiseGenerator {
@@ -10,7 +10,13 @@ pub struct NoiseGenerator {
     biome: noise::BasicMulti<noise::OpenSimplex>,
 }
 
-#[derive(Copy, Clone)]
+impl PartialEq for NoiseGenerator {
+    fn eq(&self, other: &Self) -> bool {
+        self.values == other.values && self.height.seed() == other.height.seed()
+    }
+}
+
+#[derive(Copy, Clone, PartialEq)]
 pub struct NoiseValues {
     pub resolution: f64,
 }
@@ -20,11 +26,17 @@ impl Default for NoiseValues {
     }
 }
 
-impl NoiseGenerator {
-    pub fn new(seed: u32) -> Self {
-        NoiseGenerator {
-            values: NoiseValues::default(),
+impl Default for NoiseGenerator {
+    fn default() -> Self {
+        NoiseGenerator::new(&String::from("42"), NoiseValues::default())
+    }
+}
 
+impl NoiseGenerator {
+    pub fn new(seed: &String, values: NoiseValues) -> Self {
+        let seed = seed.reflect_hash().unwrap_or(42) as u32;
+        NoiseGenerator {
+            values,
             height: noise::OpenSimplex::new(seed),
             biome: noise::BasicMulti::new(seed).set_frequency(5.0),
         }
