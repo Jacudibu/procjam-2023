@@ -6,6 +6,7 @@ mod game_ui;
 mod noise_generator;
 mod tile_data;
 
+use bevy::asset::AssetMetaCheck;
 use bevy::prelude::*;
 use bevy::window::PresentMode;
 use bevy_screen_diagnostics::{
@@ -14,6 +15,7 @@ use bevy_screen_diagnostics::{
 
 fn main() {
     App::new()
+        .insert_resource(AssetMetaCheck::Never)
         .add_plugins(
             DefaultPlugins
                 .set(ImagePlugin::default_nearest())
