@@ -137,7 +137,6 @@ fn spawn_chunks_around_camera(
             {
                 let chunk = IVec2::new(x, y);
                 if !chunk_manager.spawned_chunks.contains(&chunk) {
-                    info!("Spawning chunk {}", &chunk);
                     chunk_manager.spawned_chunks.insert(chunk);
                     spawn_chunk(&mut commands, &asset_server, chunk, &noise);
                     return;
@@ -163,7 +162,6 @@ fn despawn_out_of_range_chunks(
                 (chunk_pos.y - camera_chunk_pos.y).abs(),
             );
             if distance.x > chunk_spawn_distance.x + 1 || distance.y > chunk_spawn_distance.y + 1 {
-                info!("Despawning chunk {}", &chunk_pos);
                 chunk_manager.spawned_chunks.remove(&chunk_pos);
                 commands.entity(entity).despawn_recursive();
                 return;
